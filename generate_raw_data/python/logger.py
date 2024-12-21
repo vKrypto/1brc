@@ -50,3 +50,13 @@ def timeit(func):
         print(f"Function '{func.__name__}' took {end_time - start_time:.4f} seconds to execute.")
         return result
     return wrapper
+
+def async_timeit(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        start_time = time.time()  # Record start time
+        result = await func(*args, **kwargs)  # Execute the async function
+        end_time = time.time()  # Record end time
+        print(f"Function '{func.__name__}' took {end_time - start_time:.4f} seconds to execute.")
+        return result
+    return wrapper
