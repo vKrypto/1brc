@@ -123,8 +123,8 @@ def run_in_chunks(total_rows, chunk_size, output_file, num_chunks):
 
 if __name__ == "__main__":  
     OUTPUT_FILE = "transactions.csv"  
-    TOTAL_ROWS = 1_000_000_000  # 1 million rows  
-    CHUNK_SIZE = 1_000_000  
+    TOTAL_ROWS = 1_000_000  # 1 million rows  
+    CHUNK_SIZE = 50_000  
     workers = multiprocessing.cpu_count()  # Divide the work into 10 chunks  
     print(f"starting with {workers}")
     run_in_chunks(TOTAL_ROWS, CHUNK_SIZE, OUTPUT_FILE, workers)

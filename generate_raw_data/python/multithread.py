@@ -129,8 +129,8 @@ def run_in_chunks(total_rows, chunk_size, output_file, num_chunks):
     
 if __name__ == "__main__":
     OUTPUT_FILE = "transactions.csv"
-    TOTAL_ROWS = 1_000_000  # 1 billion rows
-    CHUNK_SIZE = 100_000
+    TOTAL_ROWS = 100_000  # 1 billion rows
+    CHUNK_SIZE = 50_000
     NUM_CHUNKS = 1  # Divide the work into 10 chunks
 
     run_in_chunks(TOTAL_ROWS, CHUNK_SIZE, OUTPUT_FILE, NUM_CHUNKS)
