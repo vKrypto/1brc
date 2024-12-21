@@ -45,5 +45,6 @@ generate_date_python_v2 :
 optimization: add multithreading in case of python3.13.
 optimization: added mulyiprocessing..
 failed stategy: 
-for 1_000_000 rows: took 1.1008 sec
-for 100_000_000 rows took 62.6809 seconds to execute.
+for 1 mil rows: took 1.1008 sec
+for 100_mil rows took 62.6809 seconds to execute.
+for 1 bil rows took 629.7750 seconds to execute.
