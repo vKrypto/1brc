@@ -106,7 +106,7 @@ async def generate_transactions(queue, total_rows, chunk_size):
 async def main():
     OUTPUT_FILE = "transactions.csv"
     TOTAL_ROWS = 1_000_000  # 1 billion rows
-    CHUNK_SIZE = 50_000
+    CHUNK_SIZE = 100_000
 
     queue = asyncio.Queue(maxsize=1)  # shared memory along asyncio task
     
