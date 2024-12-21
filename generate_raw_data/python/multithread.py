@@ -3,7 +3,7 @@ import random
 import time
 from random import uniform, choice, randint
 from datetime import datetime, timedelta
-
+import threading
 import asyncio
 import aiofiles
 
@@ -101,21 +101,36 @@ async def generate_transactions(queue, total_rows, chunk_size):
     if buffer:
         await queue.put(buffer)
     await queue.put(None)
+    
+    
+def main(total_rows, chunk_size, output_file):  
+    loop = asyncio.new_event_loop()  
+    asyncio.set_event_loop(loop)  
+    
+    queue = asyncio.Queue(maxsize=1)  
+    
+    writer_task = loop.create_task(writer_to_file_task(output_file, queue))  
+    generate_task = loop.create_task(generate_transactions(queue, total_rows, chunk_size))  
+    
+    loop.run_until_complete(asyncio.gather(writer_task, generate_task))  
+    loop.close()  
 
-@async_timeit
-async def main():
+def run_in_chunks(total_rows, chunk_size, output_file, num_chunks):
+    chunk_rows = total_rows // num_chunks
+
+    threads = []
+    for i in range(num_chunks):
+        thread = threading.Thread(target=main, args=(chunk_rows, chunk_size, output_file))
+        thread.start()
+        threads.append(thread)
+        
+    for thread in threads:
+        thread.join()
+    
+if __name__ == "__main__":
     OUTPUT_FILE = "transactions.csv"
     TOTAL_ROWS = 1_000_000  # 1 billion rows
     CHUNK_SIZE = 100_000
+    NUM_CHUNKS = 1  # Divide the work into 10 chunks
 
-    queue = asyncio.Queue(maxsize=1)  # shared memory along asyncio task
-    
-    writer_task = asyncio.create_task(writer_to_file_task(OUTPUT_FILE, queue))
-    generate_task = asyncio.create_task(generate_transactions(queue, TOTAL_ROWS, CHUNK_SIZE))
-    
-    await asyncio.gather(
-        writer_task, 
-        generate_task,
-    )
-
-asyncio.run(main())
+    run_in_chunks(TOTAL_ROWS, CHUNK_SIZE, OUTPUT_FILE, NUM_CHUNKS)
