@@ -1,5 +1,8 @@
 import logging
 import builtins
+import time
+from functools import wraps
+
 
 # Create logger
 logger = logging.getLogger("trade_logger")
@@ -35,3 +38,15 @@ def custom_print(*args):
     logger.info(message)  # Log the message
 
 builtins.print = custom_print
+
+
+
+def timeit(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()  # Record start time
+        result = func(*args, **kwargs)  # Execute the function
+        end_time = time.time()  # Record end time
+        print(f"Function '{func.__name__}' took {end_time - start_time:.4f} seconds to execute.")
+        return result
+    return wrapper

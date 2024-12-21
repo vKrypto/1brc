@@ -5,7 +5,6 @@ import random
 import os
 import time
 
-
 fake = Faker()
 
 def random_float(min_value, max_value, decimal_places):
@@ -28,7 +27,7 @@ def generate_random_transaction():
         "exchangeid": fake.random_int(1, 100), 
     }
 
-
+@timeit
 def write_to_csv(file_name, data):
     file_exists = os.path.isfile(file_name)
     with open(file_name, mode="a", newline="") as file:
@@ -37,6 +36,7 @@ def write_to_csv(file_name, data):
             writer.writeheader() 
         writer.writerows(data)
 
+@timeit
 def generate_transactions(file_name, total_rows, chunk_size):
     rows_generated = 0
     buffer = []
@@ -56,7 +56,7 @@ def generate_transactions(file_name, total_rows, chunk_size):
         print(f"Final {len(buffer)} rows written to {file_name}")
 
 OUTPUT_FILE = "transactions.csv"
-TOTAL_ROWS = 500_000  # 1 billion rows
+TOTAL_ROWS = 100_000  # 1 billion rows
 CHUNK_SIZE = 50_000
 
 
