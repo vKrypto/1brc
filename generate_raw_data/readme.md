@@ -26,14 +26,14 @@ for 100_000 rows: total time: 0.7984 seconds
 
 
 
-generate_date_python_v1 : 
+generate_date_python_v2 : 
 `
 optimization: using tuple for data generation.
 optimization: write into file asynchronously.
 failed stategy: 
 for 1_000_000 rows: took 6.4008 sec
 for 100_000 rows: total time: 0.5670 seconds
-
+for 100_000_000rows took 625.5717 seconds to execute.
 
 
 2024-12-22 02:09:20,038 - trade_logger - INFO - Function 'generate_transactions' took 0.0488 seconds to execute.

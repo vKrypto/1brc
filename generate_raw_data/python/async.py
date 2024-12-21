@@ -80,7 +80,7 @@ async def writer_to_file_task(file_name, queue):
                 break
             chunk = "\n".join([",".join(map(str, row)) for row in batch]) + "\n"
             await file.write(chunk)
-            print("writing to file")
+            # print("writing to file")
             queue.task_done()
             await asyncio.sleep(0) 
 
@@ -105,8 +105,8 @@ async def generate_transactions(queue, total_rows, chunk_size):
 @async_timeit
 async def main():
     OUTPUT_FILE = "transactions.csv"
-    TOTAL_ROWS = 1_000_000  # 1 billion rows
-    CHUNK_SIZE = 100_000
+    TOTAL_ROWS = 100_000_000  # 1 billion rows
+    CHUNK_SIZE = 1_000_000
 
     queue = asyncio.Queue(maxsize=1)  # shared memory along asyncio task
     
