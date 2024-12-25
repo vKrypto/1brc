@@ -130,8 +130,8 @@ Use the following script to load data chunks into the staging table:
 #!/bin/bash
 
 PGHOST="localhost"
-PGUSER="your_username"
-PGDATABASE="your_database"
+PGUSER="postgres"
+PGDATABASE="trades_db"
 
 for file in temp/*.csv; do
   psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -c "\COPY transactions_stagging FROM '$file' WITH (FORMAT csv);" &
