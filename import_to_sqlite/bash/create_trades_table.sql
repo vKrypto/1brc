@@ -1,7 +1,7 @@
 delete from transactions
 
 CREATE TABLE transactions (
-    timestamp DATETIME(6),
+    time_stamp DATETIME(6),
     txn_amount DECIMAL(20,8),
     small_description VARCHAR(255),
     accountid BIGINT,

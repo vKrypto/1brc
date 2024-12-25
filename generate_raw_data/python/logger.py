@@ -33,7 +33,7 @@ logger.info("started.....")
 
 original_print = builtins.print
 
-def custom_print(*args):
+def custom_print(*args, **kwargs):
     message = " ".join(map(str, args))  # Combine all args into a single string
     logger.info(message)  # Log the message
 
