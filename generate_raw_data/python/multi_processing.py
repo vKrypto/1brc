@@ -6,9 +6,15 @@ from datetime import datetime, timedelta
 import multiprocessing  
 import asyncio  
 import aiofiles  
+import pytz
+import os
+
+
+timezone = pytz.timezone('Asia/Kolkata')
+
 
 COLS = [  
-    "timestamp",  
+    "time_stamp",  
     "txn_amount",  
     "small_description",  
     "accountid",  
@@ -40,11 +46,15 @@ def random_float(min_value, max_value, decimal_places):
 def random_date(start, end):  
     delta = end - start  
     random_days = randint(0, delta.days)  
-    random_seconds = randint(0, 86400)  
-    return (start + timedelta(days=random_days, seconds=random_seconds)).isoformat()  
+    random_seconds = randint(0, 86400)
+    random_date = start + timedelta(days=random_days, seconds=random_seconds)  
+    # return (start + timedelta(days=random_days, seconds=random_seconds)).isoformat()  
+    # return utc.localize(random_date.strftime('%Y-%m-%d %H:%M:%S.%f')
+    return timezone.localize(random_date)
 
 def random_text(max_length):  
     return " ".join(f"word{i}" for i in range(randint(1, max_length // 5)))  
+
 
 def generate_random_transaction():  
     """  
@@ -66,7 +76,7 @@ def generate_random_transaction():
     )  
 
 @async_timeit  
-async def writer_to_file_task(file_name, queue):  
+async def writer_to_file_task(file_name, queue): 
     async with aiofiles.open(file_name, mode="a") as file:  
         while True:  
             batch = await queue.get()  
@@ -82,8 +92,11 @@ async def generate_transactions(queue, total_rows, chunk_size):
     rows_generated = 0  
     buffer = []  
     start_time = time.time()  
-    while rows_generated < total_rows:  
-        buffer.append(generate_random_transaction())  
+    while rows_generated < total_rows: 
+        data = generate_random_transaction() 
+        if not all(data) and len(data) == 12:
+            continue
+        buffer.append(data)  
         rows_generated += 1  
 
         if len(buffer) >= chunk_size:  
@@ -107,24 +120,45 @@ def main(total_rows, chunk_size, output_file):
     loop.run_until_complete(asyncio.gather(writer_task, generate_task))  
     loop.close()  
 
-def run_in_chunks(total_rows, chunk_size, output_file, num_chunks):  
+def run_in_chunks(total_rows, chunk_size, output_file, num_chunks, write_header=True):  
     chunk_rows = total_rows // num_chunks  
     processes = []  
     with open(output_file, mode="w") as file:  
-        file.write(",".join(COLS) + "\n")  
-
+        if write_header:
+            file.write(",".join(COLS) + "\n")  
+        else:
+            file.write("")
+    temp_dir = "temp"
+    os.makedirs(temp_dir, exist_ok=True)
     for i in range(num_chunks):  
-        process = multiprocessing.Process(target=main, args=(chunk_rows, chunk_size, output_file))  
+        process = multiprocessing.Process(target=main, args=(chunk_rows, chunk_size, f"{temp_dir}/chunk_{i+1}.csv" ))  
         process.start()  
         processes.append(process)  
 
     for process in processes:  
         process.join()  
+    
+    print("mergin csv data")
+    # combine all chunks into bunch csv
+    merge_chunks(temp_dir, output_file)
+
+
+def merge_chunks(chunk_dir, output_file):
+    # Get all CSV files in the folder
+    csv_files = [file for file in os.listdir(chunk_dir) if file.endswith('.csv')]
+
+    with open(output_file, mode="w") as outfile:
+        for file_name in csv_files:
+            file_path = os.path.join(chunk_dir, file_name)
+            with open(file_path, mode="r") as infile:
+                outfile.write(infile.read())
+            os.remove(file_path)
+    print(f"Merged {len(csv_files)} CSV files into {output_file}")
 
 if __name__ == "__main__":  
     OUTPUT_FILE = "transactions.csv"  
-    TOTAL_ROWS = 1_000_000  # 1 million rows  
-    CHUNK_SIZE = 50_000  
+    TOTAL_ROWS = 100_000_000  # 1 million rows  
+    CHUNK_SIZE = 1_000_000  
     workers = multiprocessing.cpu_count()  # Divide the work into 10 chunks  
     print(f"starting with {workers}")
-    run_in_chunks(TOTAL_ROWS, CHUNK_SIZE, OUTPUT_FILE, workers)
+    run_in_chunks(TOTAL_ROWS, CHUNK_SIZE, OUTPUT_FILE, workers, write_header=True)
