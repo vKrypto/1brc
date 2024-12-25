@@ -8,6 +8,12 @@ import asyncio
 import aiofiles  
 import pytz
 import os
+import shutil
+
+
+temp_dir = "temp"
+shutil.rmtree(temp_dir, ignore_errors=True)
+os.makedirs(temp_dir, exist_ok=True)  # clear dir too.
 
 
 timezone = pytz.timezone('Asia/Kolkata')
@@ -27,6 +33,7 @@ COLS = [
     "trade_type",  
     "exchangeid",  
 ]  
+
 
 # Pre-generate pools of random data to minimize calls to Faker and random functions  
 SYMBOL_POOL = ["BTC", "ETH", "XRP", "LTC", "ADA"]  
@@ -76,12 +83,28 @@ def generate_random_transaction():
     )  
 
 @async_timeit  
-async def writer_to_file_task(file_name, queue): 
+async def writer_to_file_task_old(file_name, queue): 
     async with aiofiles.open(file_name, mode="a") as file:  
         while True:  
             batch = await queue.get()  
             if batch is None:  # Signal to exit  
                 break  
+            chunk = "\n".join([",".join(map(str, row)) for row in batch]) + "\n"  
+            await file.write(chunk)  
+            queue.task_done()  
+            await asyncio.sleep(0)  
+
+            
+@async_timeit  
+async def writer_to_file_task(f_name, queue):
+    cnt = 1 
+    while True:  
+        batch = await queue.get()  
+        if batch is None:  # Signal to exit  
+            break  
+        file_name = f_name.replace(".csv", f"_{cnt}.csv")
+        async with aiofiles.open(file_name, mode="a") as file:  
+            cnt += 1
             chunk = "\n".join([",".join(map(str, row)) for row in batch]) + "\n"  
             await file.write(chunk)  
             queue.task_done()  
@@ -128,8 +151,6 @@ def run_in_chunks(total_rows, chunk_size, output_file, num_chunks, write_header=
             file.write(",".join(COLS) + "\n")  
         else:
             file.write("")
-    temp_dir = "temp"
-    os.makedirs(temp_dir, exist_ok=True)
     for i in range(num_chunks):  
         process = multiprocessing.Process(target=main, args=(chunk_rows, chunk_size, f"{temp_dir}/chunk_{i+1}.csv" ))  
         process.start()  
@@ -140,7 +161,7 @@ def run_in_chunks(total_rows, chunk_size, output_file, num_chunks, write_header=
     
     print("mergin csv data")
     # combine all chunks into bunch csv
-    merge_chunks(temp_dir, output_file)
+    # merge_chunks(temp_dir, output_file)
 
 
 def merge_chunks(chunk_dir, output_file):
